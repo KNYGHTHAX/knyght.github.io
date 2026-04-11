@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atharva Sarees - Invoice Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #e2e8f0;
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    /* Form Styles */
+    .form-section {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #334155;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    /* Item Styles */
+    .item-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .item-fields {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .item-fields input {
+      flex: 2;
+      padding: 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-family: monospace;
+    }
+
+    .item-fields input.qty, .item-fields input.rate {
+      flex: 1;
+    }
+
+    .image-control {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    .image-preview {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f1f5f9;
+    }
+
+    .image-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    button {
+      background: #1e293b;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #b87333;
+    }
+
+    .btn-primary {
+      background: #b87333;
+      padding: 12px 24px;
+      font-size: 16px;
+    }
+
+    /* Invoice Styles - EXACT match to your image */
+    .invoice {
+      background: white;
+      padding: 20px;
+      border: 1px solid #ccc;
+      font-family: 'Courier New', monospace;
+    }
+
+    .invoice-header {
+      text-align: center;
+      border-bottom: 2px dashed #aaa;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .invoice-header h1 {
+      font-size: 28px;
+      color: #2c1a0c;
+    }
+
+    .info-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th, td {
+      border: 1px solid #222;
+      padding: 6px;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    th {
+      background: #f2ede7;
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .product-img {
+      max-width: 50px;
+      max-height: 50px;
+    }
+
+    .words {
+      margin: 15px 0;
+      padding: 10px 0;
+      border-top: 1px dashed #aaa;
+      border-bottom: 1px dashed #aaa;
+    }
+
+    .terms {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #aaa;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .signature {
+      text-align: right;
+      margin-top: 15px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="form-section">
+    <h2 style="margin-bottom: 15px;">📋 Invoice Details</h2>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Invoice No.</label>
+        <input type="text" id="invNo" value="ATH/24-25/001">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="text" id="invDate" value="11-04-2026">
+      </div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="custName" value="Ms. Kavya S.">
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea id="custAddr" rows="1">#12, MG Road, Bangalore - 560001</textarea>
+      </div>
+    </div>
+
+    <div style="margin: 15px 0 10px; font-weight: bold;">🪢 Items</div>
+    <div id="itemsContainer"></div>
+    
+    <div style="margin: 10px 0;">
+      <button id="addItemBtn">+ Add Item</button>
+      <button id="resetBtn">Reset Default</button>
+    </div>
+    
+    <button id="pdfBtn" class="btn-primary" style="width: 100%; margin-top: 15px;">📄 Generate PDF</button>
+  </div>
+
+  <div id="invoicePreview"></div>
+</div>
+
+<script>
+  let items = [
+    { desc: "Kanchipuram Silk Saree", qty: 1, rate: 3450, image: null },
+    { desc: "Ilkal Cotton Saree", qty: 2, rate: 1890, image: null }
+  ];
+
+  function renderItems() {
+    const container = document.getElementById('itemsContainer');
+    container.innerHTML = '';
+    
+    items.forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = 'item-card';
+      div.innerHTML = `
+        <div class="item-fields">
+          <input type="text" class="item-desc" value="${escapeHtml(item.desc)}" placeholder="Description" data-idx="${idx}">
+          <input type="number" class="item-qty" value="${item.qty}" placeholder="Qty" data-idx="${idx}">
+          <input type="number" class="item-rate" value="${item.rate}" placeholder="Rate ₹" data-idx="${idx}">
+          <button class="remove-btn" data-idx="${idx}">✖</button>
+        </div>
+        <div class="image-control">
+          <input type="file" class="item-image" accept="image/*" data-idx="${idx}" style="flex:1;">
+          <div class="image-preview" id="preview-${idx}">
+            ${item.image ? `<img src="${item.image}">` : '<div style="font-size:10px; text-align:center; padding:15px 0;">No img</div>'}
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    // Add event listeners
+    document.querySelectorAll('.item-desc').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        items[e.target.dataset.idx].desc = e.target.value;
+        updatePreview();
+      });
+    });
+    
+    document.querySelectorAll('.item-qty').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        items[e.target.dataset.idx].qty = parseFloat(e.target.value) || 0;
+        updatePreview();
+      });
+    });
+    
+    document.querySelectorAll('.item-rate').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        items[e.target.dataset.idx].rate = parseFloat(e.target.value) || 0;
+        updatePreview();
+      });
+    });
+    
+    document.querySelectorAll('.item-image').forEach(inp => {
+      inp.addEventListener('change', (e) => {
+        const idx = e.target.dataset.idx;
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            items[idx].image = ev.target.result;
+            document.getElementById(`preview-${idx}`).innerHTML = `<img src="${ev.target.result}">`;
+            updatePreview();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    });
+    
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        items.splice(e.target.dataset.idx, 1);
+        if (items.length === 0) items.push({ desc: "New Item", qty: 1, rate: 0, image: null });
+        renderItems();
+        updatePreview();
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, (m) => {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  function computeTotal() {
+    let total = 0;
+    items.forEach(i => total += (i.qty || 0) * (i.rate || 0));
+    return total;
+  }
+
+  function numberToWords(amt) {
+    if (amt === 0) return "Zero Rupees Only";
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    function convert(n) {
+      if (n === 0) return '';
+      if (n < 20) return ones[n] + ' ';
+      if (n < 100) return tens[Math.floor(n/10)] + ' ' + (n%10 !== 0 ? ones[n%10] : '') + ' ';
+      if (n < 1000) return ones[Math.floor(n/100)] + ' Hundred ' + (n%100 !== 0 ? convert(n%100) : '');
+      if (n < 100000) return convert(Math.floor(n/1000)) + ' Thousand ' + (n%1000 !== 0 ? convert(n%1000) : '');
+      if (n < 10000000) return convert(Math.floor(n/100000)) + ' Lakh ' + (n%100000 !== 0 ? convert(n%100000) : '');
+      return convert(Math.floor(n/10000000)) + ' Crore ' + (n%10000000 !== 0 ? convert(n%10000000) : '');
+    }
+    return convert(Math.floor(amt)).trim() + ' Rupees Only';
+  }
+
+  function generateInvoice() {
+    const invNo = document.getElementById('invNo').value;
+    const invDate = document.getElementById('invDate').value;
+    const custName = document.getElementById('custName').value;
+    const custAddr = document.getElementById('custAddr').value;
+    const total = computeTotal();
+    
+    let rows = '';
+    items.forEach((item, idx) => {
+      const amt = (item.qty || 0) * (item.rate || 0);
+      const imgHtml = item.image ? `<img src="${item.image}" style="max-width:50px; max-height:50px;">` : '—';
+      rows += `
+        <tr>
+          <td style="text-align:center;">${idx+1}</td>
+          <td>${escapeHtml(item.desc)}</td>
+          <td style="text-align:center;">${item.qty || 0}</td>
+          <td class="text-right">₹ ${(item.rate || 0).toFixed(2)}</td>
+          <td class="text-right">₹ ${amt.toFixed(2)}</td>
+          <td style="text-align:center;">${imgHtml}</td>
+        </tr>
+      `;
+    });
+    
+    return `
+      <div class="invoice" id="invoiceContent">
+        <div class="invoice-header">
+          <h1>ATHARVA SAREES</h1>
+          <div>All Types of Kanchipuram, Ilakal, Reshme Sarees are Available</div>
+          <div><strong>Cell : 9481776723</strong></div>
+        </div>
+        
+        <div class="info-line">
+          <div><strong>No.:</strong> ${escapeHtml(invNo)}</div>
+          <div><strong>Date:</strong> ${escapeHtml(invDate)}</div>
+        </div>
+        <div class="info-line">
+          <div><strong>Name:</strong> ${escapeHtml(custName)}</div>
+          <div><strong>Address:</strong> ${escapeHtml(custAddr)}</div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr><th>Sl.No.</th><th>Description</th><th>Qty.</th><th>Rate (₹)</th><th>Amount (₹)</th><th>Image</th></tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr style="background:#f9f3ec; font-weight:bold;">
+              <td colspan="4" class="text-right">TOTAL :</td>
+              <td class="text-right">₹ ${total.toFixed(2)}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="words">
+          <strong>Rupees in Words:</strong> ${numberToWords(total)}
+        </div>
+        
+        <div class="terms">
+          <div>
+            <strong>Terms & Conditions:</strong><br>
+            1) No Return &nbsp;&nbsp; 2) No Exchange<br>
+            3) Dry Clean Only
+          </div>
+          <div><strong>For: ATHARVA SAREES</strong></div>
+        </div>
+        
+        <div class="signature">
+          (Authorised Signature)
+        </div>
+      </div>
+    `;
+  }
+
+  function updatePreview() {
+    const preview = document.getElementById('invoicePreview');
+    if (preview) {
+      preview.innerHTML = generateInvoice();
+    }
+  }
+
+  function generatePDF() {
+    const element = document.getElementById('invoiceContent');
+    if (!element) {
+      alert("Please wait for invoice to load");
+      return;
+    }
+    
+    const opt = {
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `Invoice_${document.getElementById('invNo').value}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, logging: false },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
+  }
+
+  // Initialize
+  renderItems();
+  updatePreview();
+  
+  document.getElementById('addItemBtn').onclick = () => {
+    items.push({ desc: "New Saree", qty: 1, rate: 0, image: null });
+    renderItems();
+    updatePreview();
+  };
+  
+  document.getElementById('resetBtn').onclick = () => {
+    items = [
+      { desc: "Kanchipuram Silk Saree", qty: 1, rate: 3450, image: null },
+      { desc: "Ilkal Cotton Saree", qty: 2, rate: 1890, image: null }
+    ];
+    renderItems();
+    updatePreview();
+  };
+  
+  document.getElementById('pdfBtn').onclick = generatePDF;
+  
+  document.getElementById('invNo').oninput = () => updatePreview();
+  document.getElementById('invDate').oninput = () => updatePreview();
+  document.getElementById('custName').oninput = () => updatePreview();
+  document.getElementById('custAddr').oninput = () => updatePreview();
+</script>
+</body>
+</html>
